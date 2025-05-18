@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const sections = document.querySelectorAll(".card-section");
   const card = document.querySelector(".card");
 
-  let currentSection = document.querySelector(".card-section.is-active");
+  let currentSection = document.querySelector(".card-section.is-active") || sections[0];
   let isAnimating = false;
 
   const switchSection = (targetSectionId) => {
@@ -13,17 +13,11 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!newSection || newSection === currentSection) return;
 
     isAnimating = true;
-    currentSection.classList.remove("is-active");
     currentSection.classList.add("fade-out");
-    card.style.overflowY = "hidden";
 
     setTimeout(() => {
-      sections.forEach((s) => {
-        s.classList.remove("is-active", "fade-in", "fade-out");
-        s.style.display = "none";
-      });
+      sections.forEach((s) => s.classList.remove("is-active", "fade-in", "fade-out"));
 
-      newSection.style.display = "block";
       newSection.classList.add("is-active", "fade-in");
 
       buttons.forEach((b) => b.classList.remove("is-active"));
@@ -32,7 +26,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
       card.setAttribute("data-state", targetSectionId);
       currentSection = newSection;
-      card.style.overflowY = "auto";
       isAnimating = false;
     }, 300);
   };
@@ -47,12 +40,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  if (!currentSection && sections.length > 0) {
-    currentSection = sections[0];
+  if (currentSection) {
     currentSection.classList.add("is-active");
-    currentSection.style.display = "block";
-    const firstButton = document.querySelector(`button[data-section="#${currentSection.id}"]`);
-    if (firstButton) firstButton.classList.add("is-active");
   }
 
   const typingText = document.querySelector(".typing-text .text");
@@ -87,42 +76,22 @@ document.addEventListener("DOMContentLoaded", function() {
 
   if (musicBtn && backgroundMusic) {
     backgroundMusic.volume = 0.3;
-    let musicInitialized = false;
 
     const updateMusicButton = () => {
-      if (!backgroundMusic.paused) {
-        musicBtn.classList.add("playing");
-        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
-      } else {
-        musicBtn.classList.remove("playing");
-        musicBtn.innerHTML = '<i class="fas fa-play"></i>';
-      }
+      musicBtn.innerHTML = backgroundMusic.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
     };
-
-    const handleFirstPlay = () => {
-      if (!musicInitialized) {
-        musicInitialized = true;
-        backgroundMusic.removeEventListener("play", handleFirstPlay);
-      }
-    };
-
-    backgroundMusic.addEventListener("play", handleFirstPlay);
 
     musicBtn.addEventListener("click", async () => {
-      try {
-        if (backgroundMusic.paused) {
+      if (backgroundMusic.paused) {
+        try {
           await backgroundMusic.play();
-          localStorage.setItem("musicPlaying", "true");
-        } else {
-          backgroundMusic.pause();
-          localStorage.setItem("musicPlaying", "false");
+        } catch (error) {
+          console.error("Music playback error:", error);
         }
-        updateMusicButton();
-      } catch (error) {
-        console.error("Music playback error:", error);
-        musicBtn.innerHTML = '<i class="fas fa-play"></i>';
-        musicBtn.title = "Click to enable audio";
+      } else {
+        backgroundMusic.pause();
       }
+      updateMusicButton();
     });
 
     backgroundMusic.addEventListener("ended", () => {
@@ -130,24 +99,11 @@ document.addEventListener("DOMContentLoaded", function() {
       backgroundMusic.play();
     });
 
-    const savedMusicState = localStorage.getItem("musicPlaying");
-    if (savedMusicState === "true") {
-      const tryPlay = () => {
-        backgroundMusic.play()
-          .then(() => updateMusicButton())
-          .catch(() => {
-            document.body.addEventListener("click", tryPlayOnce, { once: true });
-          });
-      };
-
-      const tryPlayOnce = () => {
-        backgroundMusic.play()
-          .then(() => updateMusicButton())
-          .catch((e) => console.log("Still blocked:", e));
-      };
-
-      tryPlay();
-    }
+    document.body.addEventListener("click", () => {
+      if (localStorage.getItem("musicPlaying") === "true") {
+        backgroundMusic.play().catch(() => console.log("Autoplay blocked"));
+      }
+    });
   }
 
   const initSnowEffect = () => {
