@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function() {
-
   const buttons = document.querySelectorAll(".card-buttons button");
   const sections = document.querySelectorAll(".card-section");
   const card = document.querySelector(".card");
@@ -42,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function() {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       const target = e.currentTarget.getAttribute("data-section");
-     .querySelector(target)) {
+      if (target && document.querySelector(target)) {
         switchSection(target);
       }
     });
@@ -52,6 +51,8 @@ document.addEventListener("DOMContentLoaded", function() {
     currentSection = sections[0];
     currentSection.classList.add("is-active");
     currentSection.style.display = "block";
+    const firstButton = document.querySelector(`button[data-section="#${currentSection.id}"]`);
+    if (firstButton) firstButton.classList.add("is-active");
   }
 
   const typingText = document.querySelector(".typing-text .text");
@@ -157,22 +158,22 @@ document.addEventListener("DOMContentLoaded", function() {
     const createSnowflake = () => {
       const snowflake = document.createElement("div");
       snowflake.className = "snowflake";
-      
+
       const size = Math.random() * 10 + 5;
       const posX = Math.random() * window.innerWidth;
       const duration = Math.random() * 5 + 5;
       const delay = Math.random() * 5;
       const opacity = Math.random() * 0.5 + 0.5;
-      
+
       snowflake.style.width = `${size}px`;
       snowflake.style.height = `${size}px`;
       snowflake.style.left = `${posX}px`;
       snowflake.style.animationDuration = `${duration}s`;
       snowflake.style.animationDelay = `${delay}s`;
       snowflake.style.opacity = opacity;
-      
+
       snowContainer.appendChild(snowflake);
-      
+
       setTimeout(() => {
         snowflake.remove();
       }, duration * 1000);
@@ -194,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function() {
   if (whatsappButton) {
     whatsappButton.addEventListener("click", () => {
       const cleanupSnow = initSnowEffect();
-      
+
       const observer = new MutationObserver(() => {
         if (card.getAttribute("data-state") !== "#whatsapp") {
           cleanupSnow();
